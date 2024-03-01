@@ -1,0 +1,13 @@
+{
+  "name": "{{ AZURE_AI_SEARCH_DATASOURCE_NAME }}",
+  "description": "Data source for Azure Blob storage container",
+  "type": "azureblob",
+  "credentials": {
+    "connectionString": "ResourceId=/subscriptions/{{ AZURE_SUBSCRIPTION_ID }}/resourceGroups/{{ AZURE_RESOURCE_GROUP_NAME }}/providers/Microsoft.Storage/storageAccounts/{{ AZURE_AI_SEARCH_DATASTORE_NAME }}"
+  },
+  "container": {
+    "name": "{{ AZURE_AI_SEARCH_DATASTORE_CONTAINER_NAME }}",
+    "query": "{{ AZURE_AI_SEARCH_DATASTORE_CONTAINER_PATH }}"
+  },
+  "dataDeletionDetectionPolicy": null
+}
