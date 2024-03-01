@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# aoai-rag-example-scenarios
-=======
 # Example Scenario: Enterprise Chatbot with Azure OpenAI, Azure AI Search, and Streamlit (RAG Pattern)
 
 ## Overview
@@ -120,4 +117,3 @@ If you want to deploy this app to Azure, you can containerise it using the `Dock
 ## License
 
 Details on licensing for the project can be found in the [LICENSE](./LICENSE) file.
->>>>>>> development
