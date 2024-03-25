@@ -6,8 +6,7 @@
     "targetIndexName": "{{ AZURE_AI_SEARCH_INDEX_NAME }}",
     "disabled": null,
     "schedule": {
-        "interval": "P1D",
-        "startTime": "2024-01-01T00:00:00Z"
+        "interval": "P1D"
     },
     "parameters": {
         "batchSize": null,

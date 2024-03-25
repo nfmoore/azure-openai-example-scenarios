@@ -17,6 +17,7 @@ COPY ../orchestration/utilities.py /app/orchestration/utilities.py
 COPY ./main.py /app/streamlit_app.py
 
 RUN pip3 install -r requirements.txt
+RUN python3 -m nltk.downloader stopwords
 
 EXPOSE 8501
 

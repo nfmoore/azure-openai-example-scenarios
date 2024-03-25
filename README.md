@@ -59,7 +59,7 @@ To run this project, you need to configure the following environment variables. 
 - `AZURE_SUBSCRIPTION_ID`: The Azure subscription ID to use for the deployment. For example, `00000000-0000-0000-0000-000000000000`.
 - `AZURE_RESOURCE_GROUP_NAME`: The name of the resource group to use for the deployment. For example, `my-resource-group`.
 - `AZURE_OPENAI_API_BASE`: The base URL for the Azure OpenAI API. For example, `https://my-resource.openai.azure.com/`.
-- `AZURE_OPENAI_API_VERSION`: The version of the Azure OpenAI API. You must set this to `2023-09-01-preview`.
+- `AZURE_OPENAI_API_VERSION`: The version of the Azure OpenAI API. You must set this to `2023-12-01-preview`.
 - `AZURE_OPENAI_API_TYPE`: The type of the Azure OpenAI API. You must set this to `azure`.
 - `AZURE_OPENAI_CHAT_DEPLOYMENT`: The name of the Azure OpenAI deployment to use for chat. For example, `gpt-35-turbo-16k-0613`.
 - `AZURE_OPENAI_CHAT_MODEL`: The name of the Azure OpenAI model to use for chat. For example, `gpt-35-turbo-16k`.
@@ -80,15 +80,20 @@ To run this project, you need to configure the following environment variables. 
 
 ### Configure the Azure AI Search service
 
-To run this project, you need to configure the Azure AI Search service. You can do this using the Azure portal or the Azure CLI. This will populate Azure AI Search with a data source, an index, an indexer, and a skillset. 
+To run this project, you need to configure the Azure AI Search service. You can do this using the Azure portal or the Azure CLI. This will populate Azure AI Search with a data source, an index, an indexer, and a skillset.
 
-All templates are provided in the `src/search/templates` folder and values for the variables, for example `{{ AZURE_OPENAI_API_BASE }}` are populated based on the environment variables.
+All templates are provided in the `src/search/templates/product-info` folder and values for the variables, for example `{{ AZURE_OPENAI_API_BASE }}` are populated based on the environment variables.
 
-To create these artifacts to configure the Azure AI Search service, you can use the following command:
+To create these artifacts to configure the Azure AI Search service you can run the notebook `src/01-populate-index.ipynb`.
 
-```bash
-python -m ./src/search/main.py --search_templates_dir ./src/search/templates/
-```
+### Query the Azure AI Search service
+
+This notebook illistrates two appraoches to query the Azure AI Search service:
+
+1. Using a custom client implementing the retreival-augmented generation (RAG) pattern.
+2. Using the Azure Open AI REST API.
+
+To query the Azure AI Search service, you can run the notebook `src/02-query-index.ipynb`.
 
 ### Run streamlit app
 
@@ -106,13 +111,13 @@ If you want to deploy this app to Azure, you can containerise it using the `Dock
 
 ## Resources
 
-- [Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/)
-- [Azure AI Search](https://learn.microsoft.com/en-us/azure/search/)
+- [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/)
+- [Azure AI Search](https://learn.microsoft.com/azure/search/)
 - [Streamlit](https://streamlit.io/)
-- [Azure OpenAI Service REST API reference](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference)
-- [Securely use Azure OpenAI on your data](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/use-your-data-securely)
-- [Introduction to prompt engineering](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/prompt-engineering)
-- [Prompt engineering techniques](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/advanced-prompt-engineering?pivots=programming-language-chat-completions)
+- [Azure OpenAI Service REST API reference](https://learn.microsoft.com/azure/ai-services/openai/reference)
+- [Securely use Azure OpenAI on your data](https://learn.microsoft.com/azure/ai-services/openai/how-to/use-your-data-securely)
+- [Introduction to prompt engineering](https://learn.microsoft.com/azure/ai-services/openai/concepts/prompt-engineering)
+- [Prompt engineering techniques](https://learn.microsoft.com/azure/ai-services/openai/concepts/advanced-prompt-engineering?pivots=programming-language-chat-completions)
 
 ## License
 
