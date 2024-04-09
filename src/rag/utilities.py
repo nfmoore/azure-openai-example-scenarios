@@ -1,9 +1,9 @@
 """
-This module contains the RetrievalAugmentedGenerationClient class for 
+This module contains the RetrievalAugmentedGenerationClient class for
 orchestrating various operations related to AI search and chat.
 
 Classes:
-    RetrievalAugmentedGenerationClient: A client class for orchestrating various 
+    RetrievalAugmentedGenerationClient: A client class for orchestrating various
     operations related to AI search and chat.
 """
 
@@ -39,8 +39,8 @@ class RetrievalAugmentedGenerationClient:
         search_endpoint: str,
         search_index_name: str,
         system_prompt_configuration_file: str,
-        open_ai_api_version="2023-12-01-preview",
-        search_api_version="2023-11-01",
+        open_ai_api_version="2024-02-01",
+        search_api_version="2024-03-01-Preview",
         credential=DefaultAzureCredential(),
     ):
         self.open_ai_endpoint = open_ai_endpoint
