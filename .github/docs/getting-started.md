@@ -2,7 +2,7 @@
 
 The purpose of this section is to provide an overview of each example scenario.
 
-## Example Scenario: Enterprise Chatbot with Azure OpenAI, Azure AI Search, and Streamlit
+## Example Scenario: Chatbot with Azure OpenAI, Azure AI Search, and Streamlit
 
 ### Potential Use Cases
 
@@ -14,7 +14,7 @@ This project serves as a valuable foundation for small-scale proof-of-concept fo
 
 ### Solution Design
 
-The below diagram shows a high-level design for the enterprise chatbot leveraging Azure OpenAI, Azure AI Search, deployed as part of an Azure Container App.
+The below diagram shows a high-level design for the chatbot leveraging Azure OpenAI, Azure AI Search, deployed as part of an Azure Container App.
 
 ![Solution Design](./images/solution-design.png)
 

@@ -27,7 +27,7 @@ This proof-of-concept will cover the following example scenarios:
 
 | Example Scenario | Description |
 | ---------------- | ----------- |
-| Enterprise Chatbot with Azure OpenAI, Azure AI Search, and Streamlit | A small-scale proof-of-concept deployment of an enterprise chatbot leveraging the power of Azure OpenAI and Azure AI Search, built and deployed using Streamlit. This approach explores implementing a custom Retrieval-Augmented Generation (RAG) pattern and implementing a stand-alone knowledge retrieval solution. |
+| Chatbot with Azure OpenAI, Azure AI Search, and Streamlit | A small-scale proof-of-concept deployment of a chatbot leveraging the power of Azure OpenAI and Azure AI Search, built and deployed using Streamlit. This approach explores implementing a custom Retrieval-Augmented Generation (RAG) pattern and implementing a stand-alone knowledge retrieval solution. |
 
 ## :balance_scale: License
 
