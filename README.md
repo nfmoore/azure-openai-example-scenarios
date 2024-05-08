@@ -1,124 +1,34 @@
-# Example Scenario: Enterprise Chatbot with Azure OpenAI, Azure AI Search, and Streamlit (RAG Pattern)
+# Example Scenarios: Generative AI Applications with Azure OpenAI
 
-## Overview
 
-This project demonstrates a small-scale proof-of-concept deployment of an enterprise chatbot leveraging the power of Azure OpenAI and Azure AI Search, built and deployed using Streamlit. Utilizing the Retrieval-Augmented Generation (RAG) pattern, the chatbot combines the strengths of both services:
+## :books: Overview
 
-- `Azure OpenAI`: Provides the large language model (LLM) capabilities for generating human-like responses based on user queries.
-- `Azure AI Search`: Enables efficient retrieval of relevant information from your enterprise knowledge base or data sources.
-- `Streamlit`: Facilitates a lightweight and user-friendly deployment experience, making the chatbot readily accessible through a web interface.
+This repository demonstrates small-scale proof-of-concept deployments of Generative AI applications with Azure OpenAI. The repository showcases the capabilities of Azure OpenAI and provides a foundation for enterprises seeking to implement Generative AI applications with Azure OpenAI.
 
-The RAG pattern implemented here utilizes Azure AI Search to retrieve the most relevant information based on the user's query. This retrieved information is then fed into the Azure OpenAI LLM, which generates a comprehensive and informative response tailored to the specific context.
+## :computer: Getting Started
 
-This project serves as a valuable foundation for small-scale proof-of-concept for enterprises seeking to:
+This repository will highlight different areas of interest when implementing Generative AI applications with Azure OpenAI. Each example scenario demonstrates a small-scale proof-of-concept that can be used as a foundation for enterprises seeking to implement Generative AI applications with Azure OpenAI.
 
-- Implement AI-powered chatbots for improved user engagement and information access.
-- Leverage the combined power of Azure OpenAI and Azure AI Search for intelligent text processing and retrieval.
-- Build and deploy chatbots efficiently and seamlessly using Streamlit.
+More information on the example scenarios is outlined in the [Getting Started](.github/docs/getting-started.md) section of this repository.
 
-## Getting Started
+### Setup
 
-### Create an environment using venv
+Detailed instructions for deploying these proofs-of-concept are outlined in the [Step-by-Step Setup](.github/docs/step-by-step-setup.md) section of this repository. The example scenarios will illustrate concepts such as:
 
-1. Create a python environment using venv. In your terminal, type:
+- Building a search index using Azure AI Search that can be used to retrieve relevant information.
+- Implementing the Retrieval-Augmented Generation (RAG) pattern.
+- Developing a lightweight web interface for a chatbot using Streamlit.
+- Deploying the Generative AI application using Streamlit.
+- Deploy the application using Azure Container Apps.
 
-    ```bash
-    python3 -m venv .venv
-    ```
+### Example Scenarios
 
-2. Activate the environment. In your terminal, type:
+This proof-of-concept will cover the following example scenarios:
 
-    - On Windows:
+| Example Scenario | Description |
+| ---------------- | ----------- |
+| Enterprise Chatbot with Azure OpenAI, Azure AI Search, and Streamlit | A small-scale proof-of-concept deployment of an enterprise chatbot leveraging the power of Azure OpenAI and Azure AI Search, built and deployed using Streamlit. This approach explores implementing a custom Retrieval-Augmented Generation (RAG) pattern and implementing a stand-alone knowledge retrieval solution. |
 
-        ```bash
-        .venv\Scripts\activate
-        ```
-
-    - On macOS and Linux:
-
-        ```bash
-        source .venv/bin/activate
-        ```
-
-3. Install the required packages. In your terminal, type:
-
-    ```bash
-    pip install -r environment/requirements.txt
-    ```
-
-4. Login to Azure using the Azure CLI. In your terminal, type:
-
-    ```bash
-    az login --tenant <your-tenant> --use-device-code
-    ```
-
-### Set environment variables
-
-To run this project, you need to configure the following environment variables. These can be stored in a .env file in the root of the project.
-
-- `AZURE_SUBSCRIPTION_ID`: The Azure subscription ID to use for the deployment. For example, `00000000-0000-0000-0000-000000000000`.
-- `AZURE_RESOURCE_GROUP_NAME`: The name of the resource group to use for the deployment. For example, `my-resource-group`.
-- `AZURE_OPENAI_API_BASE`: The base URL for the Azure OpenAI API. For example, `https://my-resource.openai.azure.com/`.
-- `AZURE_OPENAI_API_VERSION`: The version of the Azure OpenAI API. You must set this to `2023-12-01-preview`.
-- `AZURE_OPENAI_API_TYPE`: The type of the Azure OpenAI API. You must set this to `azure`.
-- `AZURE_OPENAI_CHAT_DEPLOYMENT`: The name of the Azure OpenAI deployment to use for chat. For example, `gpt-35-turbo-16k-0613`.
-- `AZURE_OPENAI_CHAT_MODEL`: The name of the Azure OpenAI model to use for chat. For example, `gpt-35-turbo-16k`.
-- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: The name of the Azure OpenAI deployment to use for embedding. For example, `text-embedding-ada-002-2`.
-- `AZURE_OPENAI_EMBEDDING_MODEL`: The name of the Azure OpenAI model to use for embedding. For example, `text-embedding-ada-002`.
-- `AZURE_OPENAI_EVALUATION_DEPLOYMENT`: The name of the Azure OpenAI deployment to use for evaluation. For example, `gpt-35-turbo-16k-0613`.
-- `AZURE_OPENAI_EVALUATION_MODEL`: The name of the Azure OpenAI model to use for evaluation. For example, `gpt-35-turbo-16k`.
-- `AZURE_AI_SEARCH_ENDPOINT`: The endpoint for the Azure AI Search service. For example, `https://my-resource.search.windows.net/`.
-- `AZURE_AI_SEARCH_INDEX_NAME`: The name of the Azure AI Search index that will store the vector embeddings of the extracted content. For example, `contoso-index`.
-- `AZURE_AI_SEARCH_INDEXER_NAME`: The name of the Azure AI Search indexer that will populate the search index with the extracted content. For example, `contoso-indexer`.
-- `AZURE_AI_SEARCH_DATASOURCE_NAME`: The name of the Azure AI Search data source that will connect the search service with the storage container. For example, `contoso-datasource`.
-- `AZURE_AI_SEARCH_SKILLSET_NAME`: The name of the Azure AI Search skillset that will chunk documents and generate embeddings. For example, `contoso-skillset`.
-- `AZURE_AI_SEARCH_INDEXER_BATCH_SIZE`: The number of documents to process in a single batch. For example, `500`.
-- `AZURE_AI_SEARCH_VECTOR_EMBEDDING_DIMENSION`: The dimension of the vector embeddings generated by the skillset. For example, `1536`.
-- `AZURE_AI_SEARCH_DATASTORE_NAME`: The name of Azure Storage account that will be registered as an Azure AI Search data source. For example, `contoso-datastore`.
-- `AZURE_AI_SEARCH_DATASTORE_CONTAINER_NAME`: The name of the Azure Storage container that stores the data that will be used to populate the index. For example, `contoso-container`.
-- `AZURE_AI_SEARCH_DATASTORE_CONTAINER_PATH`: The path to the data that will be used to populate the index. For example, `data/`.
-
-### Configure the Azure AI Search service
-
-To run this project, you need to configure the Azure AI Search service. You can do this using the Azure portal or the Azure CLI. This will populate Azure AI Search with a data source, an index, an indexer, and a skillset.
-
-All templates are provided in the `src/search/templates/product-info` folder and values for the variables, for example `{{ AZURE_OPENAI_API_BASE }}` are populated based on the environment variables.
-
-To create these artifacts to configure the Azure AI Search service you can run the notebook `src/01-populate-index.ipynb`.
-
-### Query the Azure AI Search service
-
-This notebook illistrates two appraoches to query the Azure AI Search service:
-
-1. Using a custom client implementing the retreival-augmented generation (RAG) pattern.
-2. Using the Azure Open AI REST API.
-
-To query the Azure AI Search service, you can run the notebook `src/02-query-index.ipynb`.
-
-### Run streamlit app
-
-To run the streamlit app locally for testing purposes, you can use the following command:
-
-```bash
-streamlit run ./src/app/main.py --client.toolbarMode='minimal'
-```
-
-Open your web browser and navigate to `http://localhost:8501` to access the chatbot.
-
-![Streamlit Chat App](./.github/docs/images/image-01.png)
-
-If you want to deploy this app to Azure, you can containerise it using the `Dockerfile` and deploy it to a suitable Azure service, such as Azure App Service or Azure Container Apps.
-
-## Resources
-
-- [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/)
-- [Azure AI Search](https://learn.microsoft.com/azure/search/)
-- [Streamlit](https://streamlit.io/)
-- [Azure OpenAI Service REST API reference](https://learn.microsoft.com/azure/ai-services/openai/reference)
-- [Securely use Azure OpenAI on your data](https://learn.microsoft.com/azure/ai-services/openai/how-to/use-your-data-securely)
-- [Introduction to prompt engineering](https://learn.microsoft.com/azure/ai-services/openai/concepts/prompt-engineering)
-- [Prompt engineering techniques](https://learn.microsoft.com/azure/ai-services/openai/concepts/advanced-prompt-engineering?pivots=programming-language-chat-completions)
-
-## License
+## :balance_scale: License
 
 Details on licensing for the project can be found in the [LICENSE](./LICENSE) file.
