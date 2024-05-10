@@ -1,5 +1,5 @@
 """
-    This module contains the main function that runs the streamlit application.
+This module contains the main function that runs the streamlit application.
 """
 
 import os
@@ -7,9 +7,46 @@ import re
 import sys
 
 import streamlit as st
+import yaml
 from dotenv import load_dotenv
 
-from rag.utilities import RetrievalAugmentedGenerationClient
+# sys.path.append(os.path.join(os.getcwd(), "."))
+
+# from open_ai.custom_rag_client import CustomRetrievalAugmentedGenerationClient
+
+DEFAULT_CONFIGURATION_FILE = "./open_ai/configuration.yml"
+
+
+def load_system_messages() -> tuple[str, str]:
+    """
+    Loads system messages from a predefined file.
+
+    Parameters:
+        answer (str): The text to modify.
+        references (list[dict]): The list of references.
+
+    Returns:
+        system_message: The loaded system messages for query and chat.
+    """
+    # Define configuration file
+    system_prompt_configuration_file = os.getenv(
+        "AZURE_APP_SYSTEM_PROMPT_CONFIGURATION_FILE", DEFAULT_CONFIGURATION_FILE
+    )
+
+    # Load configuration file
+    with open(system_prompt_configuration_file, "r", encoding="utf-8") as f:
+        configuration = yaml.safe_load(f)
+
+    # Get system messages
+    query_system_message = configuration.get("query_system_message")
+    chat_system_message = configuration.get("product_info_chat_system_message")
+
+    system_messages = {
+        "query_system_message": query_system_message,
+        "chat_system_message": chat_system_message,
+    }
+
+    return system_messages
 
 
 def get_answer(question: str) -> str:
@@ -17,7 +54,6 @@ def get_answer(question: str) -> str:
     Create a completion using the client and message history.
 
     Parameters:
-        client (RetrievalAugmentedGenerationClient): The rag client.
         question (str): The latest user message.
 
     Returns:
@@ -35,7 +71,7 @@ def get_answer(question: str) -> str:
     # Get the assistant message from the chat history
     formatted_answer = replace_references(
         answer=message_history[-1]["content"],
-        references=message_history[-2]["references"],
+        references=message_history[-1]["context"]["references"],
     )
 
     return formatted_answer
@@ -85,14 +121,13 @@ def main():
     st.title(os.getenv("AZURE_APP_TITLE"))
 
     # Initialize the orchestration client
-    st.session_state.client = RetrievalAugmentedGenerationClient(
+    st.session_state.client = CustomRetrievalAugmentedGenerationClient(
         open_ai_endpoint=os.getenv("AZURE_OPENAI_API_BASE"),
         open_ai_chat_deployment=os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT"),
         open_ai_embedding_deployment=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT"),
         search_endpoint=os.getenv("AZURE_AI_SEARCH_ENDPOINT"),
         search_index_name=os.getenv("AZURE_AI_SEARCH_INDEX_NAME"),
-        system_prompt_configuration_file="src/rag/configuration.yaml"
-        or os.getenv("AZURE_APP_SYSTEM_PROMPT_CONFIGURATION_FILE"),
+        **load_system_messages(),
     )
 
     # Initialize messages from app session
@@ -119,7 +154,6 @@ def main():
     if prompt := st.chat_input(
         "Ask me a question", disabled=st.session_state.is_running
     ):
-
         # Add user message to app message history
         st.session_state.app_messages.append({"role": "user", "content": prompt})
 
@@ -132,7 +166,6 @@ def main():
 
     # Generate a new response if last message is not from assistant
     if st.session_state.app_messages[-1]["role"] != "assistant":
-
         # Display assistant response in chat message container
         with st.chat_message("assistant"):
             with st.spinner("Generating response..."):
@@ -149,6 +182,9 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.path.append(os.path.join(os.getcwd(), "src"))
+    sys.path.append(os.path.join(os.getcwd(), "."))
+
+    from open_ai.custom_rag_client import CustomRetrievalAugmentedGenerationClient
+
     load_dotenv()
     main()
