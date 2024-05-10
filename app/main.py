@@ -10,10 +10,7 @@ import streamlit as st
 import yaml
 from dotenv import load_dotenv
 
-# sys.path.append(os.path.join(os.getcwd(), "."))
-
-# from open_ai.custom_rag_client import CustomRetrievalAugmentedGenerationClient
-
+DEFAULT_APP_TITLE = "Contoso Trek Product Info"
 DEFAULT_CONFIGURATION_FILE = "./open_ai/configuration.yml"
 
 
@@ -118,7 +115,7 @@ def main():
         None
     """
     # Set the title of the app
-    st.title(os.getenv("AZURE_APP_TITLE"))
+    st.title(os.getenv("APP_TITLE", DEFAULT_APP_TITLE))
 
     # Initialize the orchestration client
     st.session_state.client = CustomRetrievalAugmentedGenerationClient(
