@@ -31,7 +31,8 @@
         "ms-vscode-remote.remote-containers",
         "databricks.databricks",
         "github.vscode-github-actions",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "ms-toolsai.jupyter"
       ]
     },
     "settings": {
