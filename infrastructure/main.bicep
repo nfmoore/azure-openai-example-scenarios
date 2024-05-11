@@ -2,202 +2,199 @@
 // Parameters
 //********************************************************
 
-// Workload identifier used to create unique names for resources.
-@description('A unique identifier for the workload.')
-@minLength(2)
-@maxLength(6)
-param workloadIdentifier string = substring(uniqueString(resourceGroup().id), 1, 6)
+// @description('Resource group name')
+// param resourceGroupName string = 'rg-example-scenario-azure-databricks-online-inference-containers'
 
-// Environment identifier used to create unique names for resources.
-@description('A unique identifier for the environment.')
-@minLength(2)
-@maxLength(8)
-param environmentIdentifier string = '01'
+// @description('Databricks managed resource group name')
+// param mrgDatabricksName string = 'rgm-example-scenario-azure-databricks-online-inference-containers-databricks'
 
-// The location of resource deployments. Defaults to the location of the resource group.
-@description('The location of resource deployments.')
-param deploymentLocation string = resourceGroup().location
+// @description('Kubernetes managed resource group name')
+// param mrgKubernetesName string = 'rgm-example-scenario-azure-databricks-online-inference-containers-kubernetes'
+
+@description('Location for resources')
+param location string = az.resourceGroup().location
 
 //********************************************************
 // Variables
 //********************************************************
 
-// Search Index Data Reader
-var azureRbacSearchIndexDataReaderRoleId = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+var serviceSuffix = substring(uniqueString(az.resourceGroup().id), 0, 5)
 
-// Search Service Contributor
-var azureRbacSearchServiceContributorRoleId = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
+var resources = {
+  applicationInsightsName: 'appi01${serviceSuffix}'
+  containerRegistryName: 'cr01${serviceSuffix}'
+  logAnalyticsWorkspaceName: 'log01${serviceSuffix}'
+  storageAccountName: 'st01${serviceSuffix}'
+  userAssignedIdentityName: 'id01${serviceSuffix}'
+  containerAppEnvironmnetName: 'cae01${serviceSuffix}'
+  aiSearchName: 'srch01${serviceSuffix}'
+  openAiName: 'oai01${serviceSuffix}'
+  aiServicesName: 'aisa01${serviceSuffix}'
+  deploymentScriptName: 'ds01${serviceSuffix}'
+}
 
-// Storage Blob Data Contributor
-var azureRbacStorageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+// ********************************************************
+// Modules
+// ********************************************************
 
-// Cognitive Services OpenAI Contributor
-var azureRbacCognitiveServicesOpenAIContributorRoleId = 'a001fd3d-188f-4b5d-821b-7da978bf7442'
-
-//********************************************************
-// Resources
-//********************************************************
-
-// Azure Storage Account
-resource r_storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
-  name: 'st${workloadIdentifier}${environmentIdentifier}'
-  location: deploymentLocation
-  kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
+module userAssignedIdentity './modules/user-assigned-identity.bicep' = {
+  name: '${resources.userAssignedIdentityName}-deployment'
+  params: {
+    name: resources.userAssignedIdentityName
+    location: location
+    tags: {
+      environment: 'shared'
+    }
   }
-  properties: {
-    encryption: {
-      services: {
-        blob: {
-          enabled: true
-        }
+}
+
+module storageAccount './modules/storage-account.bicep' = {
+  name: '${resources.storageAccountName}-deployment'
+  params: {
+    name: resources.storageAccountName
+    location: location
+    tags: {
+      environment: 'shared'
+    }
+  }
+}
+
+module logAnalyticsWorkspace './modules/log-analytics-workspace.bicep' = {
+  name: '${resources.logAnalyticsWorkspaceName}-deployment'
+  params: {
+    name: resources.logAnalyticsWorkspaceName
+    location: location
+    tags: {
+      environment: 'shared'
+    }
+    storageAccountId: storageAccount.outputs.id
+  }
+}
+
+module containerRegistry './modules/container-registry.bicep' = {
+  name: '${resources.containerRegistryName}-deployment'
+  params: {
+    name: resources.containerRegistryName
+    location: location
+    tags: {
+      environment: 'shared'
+    }
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.outputs.id
+    roles: [
+      {
+        principalId: userAssignedIdentity.outputs.principalId
+        id: '7f951dda-4ed3-4680-a7ca-43fe172d538d' // ACR Pull role
       }
-      keySource: 'Microsoft.Storage'
-    }
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-      ipRules: []
-      virtualNetworkRules: []
-    }
-    publicNetworkAccess: 'Enabled'
-    supportsHttpsTrafficOnly: true
-    allowBlobPublicAccess: false
-    isHnsEnabled: false
-    minimumTlsVersion: 'TLS1_2'
+    ]
   }
 }
 
-// Azure AI Search
-resource r_aiSearch 'Microsoft.Search/searchServices@2023-11-01' = {
-  name: 'search${workloadIdentifier}${environmentIdentifier}'
-  location: deploymentLocation
-  identity: {
-    type: 'SystemAssigned'
-  }
-  sku: {
-    name: 'standard'
-  }
-  properties: {
-    networkRuleSet: {
-      ipRules: []
+module containerAppsEnvironment './modules/container-app-environment.bicep' = {
+  name: '${resources.containerAppEnvironmnetName}-deployment'
+  params: {
+    name: resources.containerAppEnvironmnetName
+    location: location
+    tags: {
+      environment: 'shared'
     }
-    publicNetworkAccess: 'enabled'
-    disableLocalAuth: false
-    authOptions: {
-      aadOrApiKey: {
-        aadAuthFailureMode: 'http401WithBearerChallenge'
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.outputs.name
+    logAnalyticsWorkspaceResourceGroupName: az.resourceGroup().name
+  }
+}
+
+module aiSearch './modules/ai-search.bicep' = {
+  name: '${resources.aiSearchName}-deployment'
+  params: {
+    name: resources.aiSearchName
+    location: location
+    tags: {
+      environment: 'shared'
+    }
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.outputs.id
+    roles: [
+      {
+        principalId: userAssignedIdentity.outputs.principalId
+        id: '7ca78c08-252a-4471-8644-bb5ff32d4ba0' // Search Service Contributor
       }
-    }
+      {
+        principalId: userAssignedIdentity.outputs.principalId
+        id: '1407120a-92aa-4202-b7e9-c0e197c71c8f' // Search Index Data Reader
+      }
+      {
+        principalId: openAi.outputs.principalId
+        id: '7ca78c08-252a-4471-8644-bb5ff32d4ba0' // Search Service Contributor
+      }
+      {
+        principalId: openAi.outputs.principalId
+        id: '1407120a-92aa-4202-b7e9-c0e197c71c8f' // Search Index Data Reader
+      }
+    ]
   }
 }
 
-// Azure Open AI Account
-resource r_aoaiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview' = {
-  name: 'aoai${workloadIdentifier}${environmentIdentifier}'
-  location: deploymentLocation
-  kind: 'OpenAI'
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    customSubDomainName: 'aoai${workloadIdentifier}${environmentIdentifier}'
-    publicNetworkAccess: 'Enabled'
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-      ipRules: []
-      virtualNetworkRules: []
+module openAi './modules/ai-services.bicep' = {
+  name: '${resources.openAiName}-01-deployment'
+  params: {
+    name: resources.openAiName
+    location: location
+    tags: {
+      environment: 'shared'
     }
-  }
-  sku: {
-    name: 'S0'
+    kind: 'OpenAI'
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.outputs.id
+    roles: [
+      {
+        principalId: userAssignedIdentity.outputs.principalId
+        id: 'a001fd3d-188f-4b5d-821b-7da978bf7442' // Cognitive Services OpenAI Contributor
+      }
+    ]
   }
 }
 
-// Define Azure Open AI Account Deployments
-var modelDeployments = [
-  {
-    name: 'gpt-35-turbo-16k-0613'
-    modelName: 'gpt-35-turbo-16k'
-    modelVersion: '0613'
-  }
-  {
-    name: 'text-embedding-ada-002-2'
-    modelName: 'text-embedding-ada-002'
-    modelVersion: '2'
-  }
-]
-
-// Azure Open AI Account Deployments
-@batchSize(1)
-resource r_aoaiDeploymentsChat 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = [for deployment in modelDeployments: {
-  parent: r_aoaiAccount
-  name: deployment.name
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: deployment.modelName
-      version: deployment.modelVersion
+module openAiRoleAssignments './modules/ai-services.bicep' = {
+  name: '${resources.openAiName}-02-deployment'
+  params: {
+    name: resources.openAiName
+    location: location
+    tags: {
+      environment: 'shared'
     }
+    kind: 'OpenAI'
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.outputs.id
+    roles: [
+      {
+        principalId: aiSearch.outputs.principalId
+        id: 'a001fd3d-188f-4b5d-821b-7da978bf7442' // Cognitive Services OpenAI Contributor
+      }
+    ]
   }
-  sku: {
-    name: 'Standard'
-    capacity: 30
+}
+
+module aiServices './modules/ai-services.bicep' = {
+  name: '${resources.aiServicesName}-deployment'
+  params: {
+    name: resources.aiServicesName
+    location: location
+    tags: {
+      environment: 'shared'
+    }
+    kind: 'CognitiveServices'
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.outputs.id
+    roles: [
+      {
+        principalId: userAssignedIdentity.outputs.principalId
+        id: '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68' // Cognitive Services Contributor
+      }
+    ]
   }
-}]
+}
 
 //********************************************************
-// RBAC Role Assignments
+// Outputs
 //********************************************************
 
-resource r_azureSearchIndexDataReaderAzureOpenAiAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid(r_aiSearch.name, r_aoaiAccount.name, 'searchIndexDataReader')
-  scope: r_aiSearch
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureRbacSearchIndexDataReaderRoleId)
-    principalId: r_aoaiAccount.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource r_azureSearchServiceContributorAzureOpenAiAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid(r_aiSearch.name, r_aoaiAccount.name, 'searchServiceContributor')
-  scope: r_aiSearch
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureRbacSearchServiceContributorRoleId)
-    principalId: r_aoaiAccount.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource r_storageBlobDataContributorAzureOpenAiAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid(r_storageAccount.name, r_aoaiAccount.name, 'storageBlobDataContributor')
-  scope: r_storageAccount
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureRbacStorageBlobDataContributorRoleId)
-    principalId: r_aoaiAccount.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource r_cognitiveServicesOpenAiContributorAzureAiSearchAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid(r_aoaiAccount.name, r_aiSearch.name, 'cognitiveServicesOpenAiContributor')
-  scope: r_aoaiAccount
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureRbacCognitiveServicesOpenAIContributorRoleId)
-    principalId: r_aiSearch.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource r_storageBlobDataContributorAzureAiSearchAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid(r_storageAccount.name, r_aiSearch.name, 'storageBlobDataContributor')
-  scope: r_storageAccount
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureRbacStorageBlobDataContributorRoleId)
-    principalId: r_aiSearch.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
+output storageAccountName string = storageAccount.outputs.name
+output logAnalyticsWorkspaceName string = logAnalyticsWorkspace.outputs.name
+output containerRegistryName string = containerRegistry.outputs.name
+output userAssignedIdentityName string = userAssignedIdentity.outputs.name
+output containerAppEnvironmnetStagingName string = containerAppsEnvironment.outputs.name
