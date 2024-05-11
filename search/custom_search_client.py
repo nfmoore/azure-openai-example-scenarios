@@ -1,9 +1,9 @@
 """
-This module contains the AISearchClient class which is used for 
+This module contains the SearchClient class which is used for
 interacting with the AI Search service.
 
 Classes:
-    AISearchClient: A client for interacting with the AI Search service.
+    CustomSearchClient: A client for interacting with the AI Search service.
 """
 
 import json
@@ -15,7 +15,7 @@ from azure.identity import DefaultAzureCredential
 from jinja2 import Template
 
 
-class SearchClient:
+class CustomSearchClient:
     """A client for interacting with the AI Search service.
 
     This class provides methods for loading templates, checking if resources exist,
@@ -30,11 +30,11 @@ class SearchClient:
     def __init__(
         self,
         search_endpoint: str,
-        api_version="2023-10-01-Preview",
+        search_api_version="2024-03-01-Preview",
         credential=DefaultAzureCredential(),
     ):
         self.search_endpoint: str = search_endpoint
-        self.api_version: str = api_version
+        self.api_version: str = search_api_version
 
         self.search_management_assets = {
             "indexers": {"name": None, "payload": None},

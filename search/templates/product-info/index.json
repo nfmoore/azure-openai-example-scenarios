@@ -116,7 +116,7 @@
       "searchAnalyzer": null,
       "analyzer": null,
       "normalizer": null,
-      "dimensions": "{{ AZURE_AI_SEARCH_VECTOR_EMBEDDING_DIMENSION }}",
+      "dimensions": "1536",
       "vectorSearchProfile": "{{ AZURE_AI_SEARCH_INDEX_NAME }}-profile",
       "synonymMaps": []
     }

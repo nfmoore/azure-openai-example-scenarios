@@ -1,21 +1,17 @@
 """
-This module contains the RetrievalAugmentedGenerationClient class for 
+This module contains the CustomRetrievalAugmentedGenerationClient class for
 orchestrating various operations related to AI search and chat.
 
 Classes:
-    RetrievalAugmentedGenerationClient: A client class for orchestrating various 
+    CustomRetrievalAugmentedGenerationClient: A client class for orchestrating various
     operations related to AI search and chat.
 """
 
-import string
-
 import requests
-import yaml
 from azure.identity import DefaultAzureCredential
-from nltk.corpus import stopwords
 
 
-class RetrievalAugmentedGenerationClient:
+class CustomRetrievalAugmentedGenerationClient:
     """
     A client class for orchestrating various operations related to AI search and chat.
 
@@ -38,9 +34,10 @@ class RetrievalAugmentedGenerationClient:
         open_ai_embedding_deployment: str,
         search_endpoint: str,
         search_index_name: str,
-        system_prompt_configuration_file: str,
-        open_ai_api_version="2023-12-01-preview",
-        search_api_version="2023-11-01",
+        query_system_message: str,
+        chat_system_message: str,
+        open_ai_api_version="2024-02-01",
+        search_api_version="2024-03-01-Preview",
         credential=DefaultAzureCredential(),
     ):
         self.open_ai_endpoint = open_ai_endpoint
@@ -62,15 +59,8 @@ class RetrievalAugmentedGenerationClient:
         self.embedding_endpoint = f"{self.open_ai_endpoint}/openai/deployments/{self.open_ai_embedding_deployment}/embeddings?api-version={self.open_ai_api_version}"
         self.query_search_endpoint = f"{self.search_endpoint}/indexes/{self.search_index_name}/docs/search?api-version={self.search_api_version}"
 
-        with open(system_prompt_configuration_file, "r", encoding="utf-8") as f:
-            configuration = yaml.safe_load(f)
-
-        self.search_query_system_message = configuration.get(
-            "search_query_system_message"
-        )
-        self.chat_response_system_message = configuration.get(
-            "chat_response_system_message"
-        )
+        self.query_system_message = query_system_message
+        self.chat_system_message = chat_system_message
 
     def get_request_headers(self, token: str) -> dict[str, str]:
         """
@@ -113,7 +103,7 @@ class RetrievalAugmentedGenerationClient:
             headers=self.get_request_headers(self.open_ai_access_token),
             json={
                 "messages": [
-                    {"role": "system", "content": self.search_query_system_message},
+                    {"role": "system", "content": self.query_system_message},
                     {"role": "user", "content": question},
                 ],
             },
@@ -143,8 +133,9 @@ class RetrievalAugmentedGenerationClient:
                 "select": selected_fields,
                 "queryType": "semantic",
                 "semanticConfiguration": f"{self.search_index_name}-semantic-configuration",
-                "captions": "extractive",
-                "answers": "extractive",
+                "captions": "extractive|highlight-true",
+                "answers": f"extractive|count-{number_of_documents}",
+                "count": "true",
                 "top": number_of_documents,
                 "vectorQueries": [
                     {
@@ -163,7 +154,11 @@ class RetrievalAugmentedGenerationClient:
 
         # Filter search documents
         filtered_search_documents = [
-            {"title": doc["title"], "path": doc["path"], "chunk": doc["chunk"]}
+            {
+                "title": doc["title"],
+                "path": doc["path"],
+                "content": doc["@search.captions"][0]["text"],
+            }
             for doc in search_documents
         ]
 
@@ -182,23 +177,15 @@ class RetrievalAugmentedGenerationClient:
             str: The augmented prompt with the retrieved documents.
         """
 
-        # Function to pre-process document content - remove punctuation and stopwords
-        def preprocess_text(text: str):
-            text = text.lower().translate(str.maketrans("", "", string.punctuation))
-            stop_words = set(stopwords.words("english"))
-            text = " ".join([word for word in text.split() if word not in stop_words])
-            return text
-
         # Generate prompt sources string
         prompt_sources = "".join(
-            [
-                f"{doc['title']} :: {doc['path']} :: {preprocess_text(doc['chunk'])} ||\n"
-                for doc in retrieved_documents
-            ]
+            [f"{doc['title']} :: {doc['content']} ||\n" for doc in retrieved_documents]
         )
 
         # Embed the sources in the prompt
-        augmented_prompt = f"{question}\nSources:\n{prompt_sources}"
+        augmented_prompt = (
+            f"#question:```{question}```\n#sources:```{prompt_sources}```"
+        )
 
         return augmented_prompt
 
@@ -230,9 +217,7 @@ class RetrievalAugmentedGenerationClient:
             self.chat_endpoint,
             headers=self.get_request_headers(self.open_ai_access_token),
             json={
-                "messages": [
-                    {"role": "system", "content": self.chat_response_system_message}
-                ]
+                "messages": [{"role": "system", "content": self.chat_system_message}]
                 + message_history_filtered
                 + [{"role": "user", "content": augmented_prompt}],
             },
@@ -246,16 +231,18 @@ class RetrievalAugmentedGenerationClient:
 
     def update_message_history(
         self,
+        question: str,
         message_history: list[dict[str, any]],
         augmented_prompt: str,
         response: str,
         retrieved_documents: list[any],
     ) -> list[dict[str, any]]:
         """
-        Updates the message history with the user and agent messages.
+        Updates the message history with the user and assistant messages.
 
         Parameters:
             self (object): An instance of the class that this method belongs to.
+            question (str): The user question.
             message_history (list[dict[str, any]]): The message history containing the user prompt.
             augmented_prompt (str): The user message.
             response (str): The assistant message.
@@ -272,14 +259,32 @@ class RetrievalAugmentedGenerationClient:
             )
         )
 
+        # Remove duplicate references from retrieved documents
+        references_without_duplicates = [
+            dict(referenceas_tuple)
+            for referenceas_tuple in {
+                tuple(reference.items()) for reference in references
+            }
+        ]
+
         # Update message history
         user_message = {
             "role": "user",
-            "content": augmented_prompt,
-            "references": references,
+            "content": question,
+            "context": {
+                "augmented_prompt": augmented_prompt,
+            },
         }
-        agent_message = {"role": "assistant", "content": response}
-        updated_message_history = message_history + [user_message, agent_message]
+
+        assistant_message = {
+            "role": "assistant",
+            "content": response,
+            "context": {
+                "references": references_without_duplicates,
+            },
+        }
+
+        updated_message_history = message_history + [user_message, assistant_message]
 
         return updated_message_history
 
@@ -309,7 +314,7 @@ class RetrievalAugmentedGenerationClient:
 
         # Update message history
         updated_message_history = self.update_message_history(
-            message_history, augmented_prompt, response, retrieved_documents
+            question, message_history, augmented_prompt, response, retrieved_documents
         )
 
         return updated_message_history
