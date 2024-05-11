@@ -2,7 +2,7 @@
 
 The purpose of this section is to provide an overview of each example scenario.
 
-## Example Scenario: Chatbot with Azure OpenAI, Azure AI Search, and Streamlit
+## Example Scenario: Pull-Based Data Ingestion with Azure AI Search & Custom Retrieval-Augmented Generation (RAG) Implementation
 
 ### Potential Use Cases
 
