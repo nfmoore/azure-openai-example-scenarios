@@ -8,6 +8,7 @@ import sys
 
 import streamlit as st
 import yaml
+from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from dotenv import load_dotenv
 
 DEFAULT_APP_TITLE = "Contoso Trek Product Info"
@@ -101,7 +102,23 @@ def replace_references(answer: str, references: list[dict]) -> str:
     return answer
 
 
-def main():
+def get_credential() -> ManagedIdentityCredential | DefaultAzureCredential:
+    """
+    Get the Azure credential for the client.
+
+    Parameters:
+        None
+
+    Returns:
+        credential: The Azure credential.
+    """
+    if os.getenv("AZURE_CLIENT_ID"):
+        return ManagedIdentityCredential(client_id=os.getenv("AZURE_CLIENT_ID"))
+    else:
+        return DefaultAzureCredential()
+
+
+def main() -> None:
     """
     Main function that runs the application.
 
@@ -124,6 +141,7 @@ def main():
         open_ai_embedding_deployment=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT"),
         search_endpoint=os.getenv("AZURE_AI_SEARCH_ENDPOINT"),
         search_index_name=os.getenv("AZURE_AI_SEARCH_INDEX_NAME"),
+        credential=get_credential(),
         **load_system_messages(),
     )
 
