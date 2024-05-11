@@ -32,7 +32,8 @@
         "databricks.databricks",
         "github.vscode-github-actions",
         "redhat.vscode-yaml",
-        "ms-toolsai.jupyter"
+        "ms-toolsai.jupyter",
+        "ms-python.python"
       ]
     },
     "settings": {
