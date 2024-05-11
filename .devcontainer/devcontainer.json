@@ -33,7 +33,8 @@
         "github.vscode-github-actions",
         "redhat.vscode-yaml",
         "ms-toolsai.jupyter",
-        "ms-python.python"
+        "ms-python.python",
+        "yzhang.markdown-all-in-one"
       ]
     },
     "settings": {
