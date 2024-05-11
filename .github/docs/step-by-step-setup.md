@@ -54,7 +54,9 @@ Before implementing this example scenario the following is needed:
 
 ## 2. Example Scenario Setup
 
-## 2.1. Pull-Based Data Ingestion with Azure AI Search & Custom Retrieval-Augmented Generation (RAG) Implementation
+## 2.1. Contoso Trek Product Info Chatbot (Custom)
+
+The [Getting Started](.github/docs/getting-started.md) section of this repository provides an overview of the Contoso Trek Product Info Chatbot (Custom) example scenario.
 
 ### 2.1.1. Set environment variables
 
