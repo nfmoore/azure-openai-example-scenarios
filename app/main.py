@@ -11,7 +11,7 @@ import yaml
 from dotenv import load_dotenv
 
 DEFAULT_APP_TITLE = "Contoso Trek Product Info"
-DEFAULT_CONFIGURATION_FILE = "./open_ai/configuration.yml"
+DEFAULT_CONFIGURATION_FILE = "./llms/system_messages.yml"
 
 
 def load_system_messages() -> tuple[str, str]:
@@ -181,7 +181,7 @@ def main():
 if __name__ == "__main__":
     sys.path.append(os.path.join(os.getcwd(), "."))
 
-    from open_ai.custom_rag_client import CustomRetrievalAugmentedGenerationClient
+    from llms.custom_rag_client import CustomRetrievalAugmentedGenerationClient
 
     load_dotenv()
     main()

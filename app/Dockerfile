@@ -11,12 +11,12 @@ RUN apt-get update && apt-get install -y \
 
 COPY ./app/requirements.txt /app/requirements.txt
 
-COPY ./open_ai/custom_rag_client.py /app/open_ai/custom_rag_client.py
-COPY ./open_ai/configuration.yml /app/open_ai/configuration.yml
+COPY ./llms/custom_rag_client.py /app/llms/custom_rag_client.py
+COPY ./llms/system_messages.yml /app/llms/system_messages.yml
 
 COPY ./app/main.py /app/streamlit_app.py
 
-ARG AZURE_APP_SYSTEM_PROMPT_CONFIGURATION_FILE=./open_ai/configuration.yml
+ARG AZURE_APP_SYSTEM_PROMPT_CONFIGURATION_FILE=./llms/system_messages.yml
 ARG AZURE_APP_TITLE="Contoso Trek Product Info"
 
 RUN pip install --no-cache-dir --upgrade pip && \
