@@ -34,7 +34,15 @@ Before implementing this example scenario the following is needed:
 
 ## 1.2. Deploy Azure resources
 
-1. Run the following command to get your Object ID of your Azure AD user.
+1. Before running the notebooks ensure you authenticate with the Azure CLI by running the following command:
+
+    ```bash
+    az login --tenant <your-tenant-id>
+    ```
+
+    This will open a browser window to authenticate with the Azure CLI.
+
+2. Run the following command to get your Object ID of your Azure AD user.
 
     ```bash
     az ad signed-in-user show --query "id" -o tsv
@@ -42,7 +50,7 @@ Before implementing this example scenario the following is needed:
 
     This will be used to assign the required permissions needed to interact with the Azure resources during the setup or a development scenario.
 
-2. Click the `Deploy to Azure` button below to deploy the Azure resources required for these example scenarios.
+3. Click the `Deploy to Azure` button below to deploy the Azure resources required for these example scenarios.
 
     [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fnfmoore%2Fazure-open-ai-example-scenarios%2Fmain%2Finfrastructure%2Fmain.json)
 
@@ -64,10 +72,10 @@ The [Getting Started](.github/docs/getting-started.md) section of this repositor
 
     ```bash
     AZURE_SUBSCRIPTION_ID=<your-subscription-id>
-    AZURE_RESOURCE_GROUP=<your-resource-group>
+    AZURE_RESOURCE_GROUP_NAME=<your-resource-group>
     
-    AZURE_OPENAI_API_BASE=<your-open-ai-service-name>.openai.azure.com
-    AZURE_AI_SEARCH_ENDPOINT=<your-search-service-name>.search.windows.net
+    AZURE_OPENAI_API_BASE=https://<your-open-ai-service-name>.openai.azure.com
+    AZURE_AI_SEARCH_ENDPOINT=https://<your-search-service-name>.search.windows.net
 
     AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-35-turbo-16k-0613
     AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002-2
@@ -161,11 +169,11 @@ The [Getting Started](.github/docs/getting-started.md) section of this repositor
     export USER_ASSIGNED_IDENTITY_ID=$(az identity show --resource-group $RESOURCE_GROUP_NAME --name $USER_ASSIGNED_IDENTITY_NAME | jq '.id' -r)
     export USER_ASSIGNED_IDENTITY_CLIENT_ID=$(az identity show --resource-group $RESOURCE_GROUP_NAME --name $USER_ASSIGNED_IDENTITY_NAME | jq '.clientId' -r)
 
-    export AZURE_OPENAI_API_BASE=<your-open-ai-service-name>.openai.azure.com # can be found on the Azure Portal
+    export AZURE_OPENAI_API_BASE=https://<your-open-ai-service-name>.openai.azure.com # can be found on the Azure Portal
     export AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-35-turbo-16k-0613
     export AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002-2
 
-    export AZURE_AI_SEARCH_ENDPOINT=<your-search-service-name>.search.windows.net # can be found on the Azure Portal
+    export AZURE_AI_SEARCH_ENDPOINT=https://<your-search-service-name>.search.windows.net # can be found on the Azure Portal
     export AZURE_AI_SEARCH_INDEX_NAME=contoso-trek-product-info-01-index
 
     az containerapp create \
