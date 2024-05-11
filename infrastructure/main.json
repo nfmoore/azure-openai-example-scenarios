@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.27.1.19265",
-      "templateHash": "7755730817978522927"
+      "templateHash": "12164655026923384675"
     }
   },
   "parameters": {
@@ -14,6 +14,12 @@
       "defaultValue": "[resourceGroup().location]",
       "metadata": {
         "description": "Location for resources"
+      }
+    },
+    "userObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "User Object ID for authenticated user"
       }
     }
   },
@@ -116,7 +122,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
-      "name": "[format('{0}-deployment', variables('resources').storageAccountName)]",
+      "name": "[format('{0}-01-deployment', variables('resources').storageAccountName)]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -258,6 +264,159 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
+      "name": "[format('{0}-02-deployment', variables('resources').storageAccountName)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[variables('resources').storageAccountName]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "roles": {
+            "value": [
+              {
+                "principalId": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-deployment', variables('resources').aiSearchName)), '2022-09-01').outputs.principalId.value]",
+                "id": "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+              },
+              {
+                "principalId": "[parameters('userObjectId')]",
+                "id": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+                "type": "User"
+              }
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.27.1.19265",
+              "templateHash": "14075893523994139509"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Storage service"
+              }
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for Storage service"
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {},
+              "metadata": {
+                "description": "Tags for the Storage service"
+              }
+            },
+            "roles": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "Role assignments for the Storage service"
+              }
+            },
+            "enableHns": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Enable hierarchical namespace"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2022-05-01",
+              "name": "[parameters('name')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "kind": "StorageV2",
+              "properties": {
+                "isHnsEnabled": "[parameters('enableHns')]",
+                "minimumTlsVersion": "TLS1_2"
+              }
+            },
+            {
+              "copy": {
+                "name": "roleAssignments",
+                "count": "[length(parameters('roles'))]"
+              },
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('name'))]",
+              "name": "[guid(parameters('name'), parameters('roles')[copyIndex()].principalId, parameters('roles')[copyIndex()].id)]",
+              "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('roles')[copyIndex()].id)]",
+                "principalId": "[parameters('roles')[copyIndex()].principalId]",
+                "principalType": "[if(contains(parameters('roles')[copyIndex()], 'type'), parameters('roles')[copyIndex()].type, 'ServicePrincipal')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2020-10-01",
+              "name": "[format('ds{0}', parameters('name'))]",
+              "location": "[parameters('location')]",
+              "kind": "AzureCLI",
+              "properties": {
+                "azCliVersion": "2.30.0",
+                "timeout": "PT5M",
+                "retentionInterval": "PT1H",
+                "environmentVariables": [
+                  {
+                    "name": "AZURE_STORAGE_ACCOUNT",
+                    "value": "[parameters('name')]"
+                  },
+                  {
+                    "name": "AZURE_STORAGE_KEY",
+                    "secureValue": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('name')), '2022-05-01').keys[0].value]"
+                  }
+                ],
+                "scriptContent": "      git clone https://github.com/nfmoore/azure-open-ai-example-scenarios.git\n      az storage container create --name data --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_KEY \n      az storage blob upload-batch --destination data --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_KEY --destination-path ./ --source ./azure-open-ai-example-scenarios/data\n      "
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "name": {
+              "type": "string",
+              "value": "[parameters('name')]"
+            },
+            "id": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}-deployment', variables('resources').aiSearchName))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
       "name": "[format('{0}-deployment', variables('resources').logAnalyticsWorkspaceName)]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -277,7 +436,7 @@
             }
           },
           "storageAccountId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-deployment', variables('resources').storageAccountName)), '2022-09-01').outputs.id.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-01-deployment', variables('resources').storageAccountName)), '2022-09-01').outputs.id.value]"
           }
         },
         "template": {
@@ -424,7 +583,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', format('{0}-deployment', variables('resources').storageAccountName))]"
+        "[resourceId('Microsoft.Resources/deployments', format('{0}-01-deployment', variables('resources').storageAccountName))]"
       ]
     },
     {
@@ -754,6 +913,16 @@
               {
                 "principalId": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-01-deployment', variables('resources').openAiName)), '2022-09-01').outputs.principalId.value]",
                 "id": "1407120a-92aa-4202-b7e9-c0e197c71c8f"
+              },
+              {
+                "principalId": "[parameters('userObjectId')]",
+                "id": "7ca78c08-252a-4471-8644-bb5ff32d4ba0",
+                "type": "User"
+              },
+              {
+                "principalId": "[parameters('userObjectId')]",
+                "id": "8ebe5a00-799e-43f5-93ac-243d3dce84a7",
+                "type": "User"
               }
             ]
           }
@@ -922,6 +1091,11 @@
               {
                 "principalId": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-deployment', variables('resources').userAssignedIdentityName)), '2022-09-01').outputs.principalId.value]",
                 "id": "a001fd3d-188f-4b5d-821b-7da978bf7442"
+              },
+              {
+                "principalId": "[parameters('userObjectId')]",
+                "id": "a001fd3d-188f-4b5d-821b-7da978bf7442",
+                "type": "User"
               }
             ]
           }
@@ -1548,7 +1722,7 @@
   "outputs": {
     "storageAccountName": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-deployment', variables('resources').storageAccountName)), '2022-09-01').outputs.name.value]"
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-01-deployment', variables('resources').storageAccountName)), '2022-09-01').outputs.name.value]"
     },
     "logAnalyticsWorkspaceName": {
       "type": "string",

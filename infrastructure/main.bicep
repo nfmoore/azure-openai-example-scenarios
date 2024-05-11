@@ -14,6 +14,9 @@
 @description('Location for resources')
 param location string = az.resourceGroup().location
 
+@description('User Object ID for authenticated user')
+param userObjectId string
+
 //********************************************************
 // Variables
 //********************************************************
@@ -49,13 +52,32 @@ module userAssignedIdentity './modules/user-assigned-identity.bicep' = {
 }
 
 module storageAccount './modules/storage-account.bicep' = {
-  name: '${resources.storageAccountName}-deployment'
+  name: '${resources.storageAccountName}-01-deployment'
   params: {
     name: resources.storageAccountName
     location: location
     tags: {
       environment: 'shared'
     }
+  }
+}
+
+module storageAccountRoleAssignements './modules/storage-account.bicep' = {
+  name: '${resources.storageAccountName}-02-deployment'
+  params: {
+    name: resources.storageAccountName
+    location: location
+    roles: [
+      {
+        principalId: aiSearch.outputs.principalId
+        id: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe' // Storage Blob Data Contributor
+      }
+      {
+        principalId: userObjectId
+        id: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe' // Storage Blob Data Contributor
+        type: 'User'
+      }
+    ]
   }
 }
 
@@ -128,6 +150,16 @@ module aiSearch './modules/ai-search.bicep' = {
         principalId: openAi.outputs.principalId
         id: '1407120a-92aa-4202-b7e9-c0e197c71c8f' // Search Index Data Reader
       }
+      {
+        principalId: userObjectId
+        id: '7ca78c08-252a-4471-8644-bb5ff32d4ba0' // Search Service Contributor
+        type: 'User'
+      }
+      {
+        principalId: userObjectId
+        id: '8ebe5a00-799e-43f5-93ac-243d3dce84a7' // Search Index Data Contributor
+        type: 'User'
+      }
     ]
   }
 }
@@ -146,6 +178,11 @@ module openAi './modules/ai-services.bicep' = {
       {
         principalId: userAssignedIdentity.outputs.principalId
         id: 'a001fd3d-188f-4b5d-821b-7da978bf7442' // Cognitive Services OpenAI Contributor
+      }
+      {
+        principalId: userObjectId
+        id: 'a001fd3d-188f-4b5d-821b-7da978bf7442' // Cognitive Services OpenAI Contributor
+        type: 'User'
       }
     ]
   }
